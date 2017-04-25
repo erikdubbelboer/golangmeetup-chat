@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+	<head>
+	</head>
+	<body>
+
+		Chat APP
+
+		<input type=text id=body> <input type=submit id=submit>
+
+		<div id=messages></div>
+
+	</body>
+
+	<script>
+    var lastMessage = 0;
+
+    function update() {
+			var req = new XMLHttpRequest();
+
+			req.onreadystatechange = function() {
+				if (req.readyState === XMLHttpRequest.DONE) {
+					if (req.status === 200) {
+						var messages = JSON.parse(req.responseText);
+						var div = document.getElementById('messages');
+
+						for (var i = 0; i < messages.length; i++) {
+							var message = messages[i];
+
+							if (message.id > lastMessage) {
+								lastMessage = message.id;
+							}
+
+							div.innerHTML += '<hr>';
+							div.innerHTML += '<p>' + message.from_name + '</p>';
+							div.innerHTML += '<p>' + message.body + '</p>';
+						}
+					} else {
+						console.dir(req);
+					}
+				}
+			};
+
+			req.open('GET', 'http://localhost:9090/messages?since=' + lastMessage, true);
+			req.send();
+
+			setTimeout(update, 1000);
+		}
+
+    update();
+
+		var name = prompt('what is your name?');
+
+		document.getElementById('submit').addEventListener('click', function() {
+			var body = document.getElementById('body').value;
+			var req = new XMLHttpRequest();
+			req.open('POST', 'http://localhost:9090/newmessage', true);
+			req.send(JSON.stringify({
+				'from_name': name,
+				'body': body,
+			}));
+		});
+	</script>
+</html>
